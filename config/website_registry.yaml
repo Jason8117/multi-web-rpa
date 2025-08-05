@@ -1,0 +1,53 @@
+# 웹사이트 레지스트리
+# 등록된 모든 웹사이트 플러그인 정보
+
+websites:
+  ip_168_itsm:
+    name: "IP 168 ITSM"
+    description: "IP 168 ITSM 회원등록 자동화"
+    module: "websites.ip_168_itsm.automation"
+    class: "IP168ITSMAutomation"
+    enabled: true
+    config_file: "websites/ip_168_itsm/config.yaml"
+    template_file: "websites/ip_168_itsm/template.xlsx"
+    version: "1.0.0"
+    author: "RPA Team"
+    
+  iljin_holdings:
+    name: "일진홀딩스"
+    description: "일진홀딩스 방문신청 자동화"
+    module: "websites.iljin_holdings.automation"
+    class: "IljinHoldingsAutomation"
+    enabled: true
+    config_file: "websites/iljin_holdings/config.yaml"
+    template_file: "websites/iljin_holdings/template.xlsx"
+    version: "1.0.0"
+    author: "RPA Team"
+    
+  company_b:
+    name: "회사 B"
+    description: "회사 B 자동화 (예시)"
+    module: "websites.company_b.automation"
+    class: "CompanyBAutomation"
+    enabled: false  # 개발 중이므로 비활성화
+    config_file: "websites/company_b/config.yaml"
+    template_file: "websites/company_b/template.xlsx"
+    version: "0.1.0"
+    author: "RPA Team"
+    
+  company_c:
+    name: "회사 C"
+    description: "회사 C 자동화 (예시)"
+    module: "websites.company_c.automation"
+    class: "CompanyCAutomation"
+    enabled: false  # 개발 중이므로 비활성화
+    config_file: "websites/company_c/config.yaml"
+    template_file: "websites/company_c/template.xlsx"
+    version: "0.1.0"
+    author: "RPA Team"
+
+# 플러그인 시스템 설정
+plugin_system:
+  auto_reload: false
+  hot_reload: false
+  plugin_timeout: 30 

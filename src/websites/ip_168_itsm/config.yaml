@@ -1,0 +1,41 @@
+# IP 168 ITSM 웹사이트 설정
+
+# 웹사이트 정보
+website:
+  name: "IP 168 ITSM"
+  url: "http://4.144.198.168/sign-in"
+  login_url: "http://4.144.198.168/sign-in"
+  requires_login: true
+  timeout: 10
+  retry_count: 3
+
+# 로그인 정보
+login:
+  username: "ij_itsmadmin"
+  password: "0"
+  username_field: "input[name='userName']"
+  password_field: "input[name='password']"
+  login_button: "button[type='submit']"
+
+# 자동화 단계 설정
+automation_steps:
+  - name: "navigate_to_website"
+    description: "웹사이트 접속"
+    required: true
+    
+  - name: "login"
+    description: "로그인"
+    required: true
+
+# 선택자 정의
+selectors:
+  username_input: "input[name='userName']"
+  password_input: "input[name='password']"
+  login_button: "button[type='submit']"
+  login_form: "form"
+  
+# 대기 시간 설정
+wait_times:
+  page_load: 3
+  element_wait: 5
+  login_wait: 2 

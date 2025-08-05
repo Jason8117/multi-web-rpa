@@ -1,0 +1,97 @@
+# 일진홀딩스 웹사이트 설정
+
+# 웹사이트 정보
+website:
+  name: "일진홀딩스"
+  url: "http://visit.iljin.co.kr"
+  login_url: "http://visit.iljin.co.kr/login"
+  requires_login: false
+  timeout: 10
+  retry_count: 3
+
+# 자동화 단계 설정
+automation_steps:
+  - name: "navigate_to_website"
+    description: "웹사이트 접속"
+    required: true
+    
+  - name: "select_iljin_holdings"
+    description: "일진홀딩스 선택"
+    required: true
+    
+  - name: "select_visit_request"
+    description: "방문신청하기 선택"
+    required: true
+    
+  - name: "agree_to_terms"
+    description: "방문신청약관 동의"
+    required: true
+    
+  - name: "fill_visit_form"
+    description: "방문신청 폼 작성"
+    required: true
+    
+  - name: "click_confirm_button"
+    description: "확인 버튼 클릭"
+    required: true
+
+# 폼 필드 매핑
+form_fields:
+  visit_location:
+    excel_column: "방문사업장"
+    web_element: "select_0"
+    value_mapping:
+      "마곡빌딩(홀딩스)": "B1"
+      
+  contact_number:
+    excel_column: "피방문자 연락처"
+    web_elements: ["input_1", "input_2"]  # 두 번째, 세 번째 텍스트 박스
+    split_by: "-"
+    
+  visit_person:
+    excel_column: "피방문자"
+    web_element: "input_2"  # 세 번째 텍스트 박스
+    
+  applicant:
+    excel_column: "신청자"
+    web_element: "input_3"  # 네 번째 텍스트 박스
+    
+  applicant_contact:
+    excel_column: "연락처"
+    web_elements: ["input_4", "input_5"]  # 다섯 번째, 여섯 번째 텍스트 박스
+    split_by: "-"
+    
+  visitor_add_checkbox:
+    excel_column: "방문객으로 추가"
+    web_element: "visitorAdd"
+    default_value: true
+    
+  company:
+    excel_column: "소속회사"
+    web_element: "input_6"  # 7번째 텍스트박스
+    
+  company_address:
+    excel_column: "회사주소"
+    web_element: "input_7"  # 8번째 텍스트박스
+    
+  visit_start_date:
+    excel_column: "방문기간"
+    web_element: "input_8"  # 9번째 텍스트박스
+    date_format: "YYYY-MM-DD"
+    
+  visit_end_date:
+    excel_column: "방문기간"
+    web_element: "input_9"  # 10번째 텍스트박스
+    date_format: "YYYY-MM-DD"
+    add_days: 4
+    
+  content:
+    excel_column: "내용"
+    web_element: "input_10"  # 11번째 텍스트박스
+
+# 선택자 정의
+selectors:
+  visit_location_select: "select[name='select_0']"
+  contact_inputs: "input[type='text']"
+  confirm_button: "button:contains('확인')"
+  agree_checkboxes: ["agreeChk_1", "agreeChk_2"] 
