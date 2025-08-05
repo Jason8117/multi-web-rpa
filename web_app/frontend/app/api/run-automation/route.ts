@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
-import { writeFileSync } from 'fs';
+import { writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 export async function POST(request: NextRequest) {
@@ -23,9 +23,8 @@ export async function POST(request: NextRequest) {
     
     // temp 디렉토리 생성
     const tempDir = join(process.cwd(), 'temp');
-    const fs = require('fs');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+    if (!existsSync(tempDir)) {
+      mkdirSync(tempDir, { recursive: true });
     }
     
     writeFileSync(filePath, buffer);
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
           
           // 임시 파일 삭제
           try {
-            fs.unlinkSync(filePath);
+            unlinkSync(filePath);
           } catch (error) {
             console.error('임시 파일 삭제 실패:', error);
           }
