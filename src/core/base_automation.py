@@ -18,6 +18,7 @@ class BaseAutomation(ABC):
         self.driver: Optional[webdriver.Chrome] = None
         self.wait: Optional[WebDriverWait] = None
         self.logger = logger
+        self.keep_browser = True  # 기본적으로 브라우저 유지
         
     @abstractmethod
     def setup_driver(self) -> None:
@@ -51,13 +52,21 @@ class BaseAutomation(ABC):
         
     def cleanup(self) -> None:
         """리소스 정리"""
-        if self.driver:
+        if self.driver and not self.keep_browser:
             self.driver.quit()
             self.logger.info("웹드라이버 종료")
+        elif self.keep_browser:
+            self.logger.info("브라우저를 열린 상태로 유지합니다")
             
-    def run_automation(self, data: Dict[str, Any]) -> bool:
+    def set_keep_browser(self, keep_browser: bool) -> None:
+        """브라우저 유지 여부 설정"""
+        self.keep_browser = keep_browser
+        self.logger.info(f"브라우저 유지 설정: {keep_browser}")
+            
+    def run_automation(self, data: Dict[str, Any], keep_browser: bool = True) -> bool:
         """자동화 실행"""
         try:
+            self.keep_browser = keep_browser
             self.logger.info("자동화 시작")
             
             # 1. 웹드라이버 설정
@@ -86,12 +95,20 @@ class BaseAutomation(ABC):
                 return False
                 
             self.logger.info("자동화 완료")
+            
+            # 브라우저 유지 여부에 따른 처리
+            if self.keep_browser:
+                self.logger.info("브라우저가 열린 상태로 유지됩니다. 웹에서 다음 작업을 진행할 수 있습니다.")
+            else:
+                self.logger.info("브라우저를 닫습니다.")
+                self.cleanup()
+                
             return True
             
         except Exception as e:
             self.logger.error(f"자동화 실행 중 오류: {e}")
             return False
         finally:
-            # 리소스 정리는 사용자가 선택할 수 있도록 주석 처리
-            # self.cleanup()
-            pass 
+            # 리소스 정리는 keep_browser 설정에 따라 결정
+            if not self.keep_browser:
+                self.cleanup() 

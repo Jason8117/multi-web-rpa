@@ -39,14 +39,18 @@ export async function POST(request: NextRequest) {
         console.log('Python 경로:', pythonPath);
         console.log('메인 스크립트 경로:', mainScriptPath);
         console.log('작업 디렉토리:', projectRoot);
+        console.log('선택된 웹사이트:', website);
+        console.log('입력 파일:', filePath);
         
         let isControllerClosed = false;
         
+        // 웹 모드로 실행하여 브라우저 유지
         const pythonProcess = spawn(pythonPath, [
           mainScriptPath,
           '--website', website,
           '--test',
-          '--input-file', filePath
+          '--input-file', filePath,
+          '--web-mode'
         ], {
           cwd: projectRoot,
           env: {
@@ -81,7 +85,11 @@ export async function POST(request: NextRequest) {
 
         // 프로세스 종료 처리
         pythonProcess.on('close', (code) => {
-          safeEnqueue(`\n프로세스가 종료되었습니다. (코드: ${code})\n`);
+          safeEnqueue(`\n🎉 자동화 프로세스가 완료되었습니다! (코드: ${code})\n`);
+          safeEnqueue(`🌐 브라우저가 열린 상태로 유지됩니다.\n`);
+          safeEnqueue(`💡 웹에서 직접 다음 작업을 진행할 수 있습니다.\n`);
+          safeEnqueue(`📝 자동화 결과를 확인하고 필요한 경우 수동으로 조정하세요.\n`);
+          safeEnqueue(`⚠️  브라우저를 닫으려면 수동으로 닫기 버튼을 클릭하세요.\n`);
           isControllerClosed = true;
           controller.close();
           
@@ -95,7 +103,9 @@ export async function POST(request: NextRequest) {
 
         // 오류 처리
         pythonProcess.on('error', (error) => {
-          safeEnqueue(`오류: ${error.message}\n`);
+          safeEnqueue(`❌ 오류가 발생했습니다: ${error.message}\n`);
+          safeEnqueue(`🌐 브라우저는 열린 상태로 유지됩니다.\n`);
+          safeEnqueue(`💡 오류를 확인하고 필요한 경우 수동으로 작업을 진행하세요.\n`);
           isControllerClosed = true;
           controller.close();
         });

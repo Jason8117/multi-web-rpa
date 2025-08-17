@@ -27,6 +27,7 @@ class IP168ITSMAutomation(BaseAutomation):
         self.driver = None
         self.wait = None
         self.excel_reader = ITSMExcelReader(config)
+        self.keep_browser = True  # 기본적으로 브라우저 유지
         
     def setup_driver(self) -> None:
         """웹드라이버 설정"""
@@ -262,13 +263,17 @@ class IP168ITSMAutomation(BaseAutomation):
             return False
     
     def cleanup(self) -> None:
-        """웹드라이버 정리"""
-        if self.driver:
-            try:
-                self.driver.quit()
-                logger.info("웹드라이버 정리 완료")
-            except Exception as e:
-                logger.error(f"웹드라이버 정리 오류: {e}")
+        """리소스 정리"""
+        if self.driver and not self.keep_browser:
+            self.driver.quit()
+            logger.info("IP 168 ITSM 웹드라이버 종료")
+        elif self.keep_browser:
+            logger.info("IP 168 ITSM 브라우저를 열린 상태로 유지합니다")
+            
+    def set_keep_browser(self, keep_browser: bool) -> None:
+        """브라우저 유지 여부 설정"""
+        self.keep_browser = keep_browser
+        logger.info(f"IP 168 ITSM 브라우저 유지 설정: {keep_browser}")
     
     def wait_for_user_input(self) -> None:
         """사용자 입력 대기"""
@@ -2811,3 +2816,4 @@ class IP168ITSMAutomation(BaseAutomation):
         except Exception as e:
             logger.error(f"스크린샷 촬영 실패: {e}")
             return None 
+

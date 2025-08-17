@@ -53,10 +53,20 @@ class WebDriverManager:
             chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
             chrome_options.add_experimental_option('useAutomationExtension', False)
             
+            # 브라우저 유지를 위한 옵션
+            chrome_options.add_experimental_option("detach", True)  # Python 프로세스 종료 후에도 브라우저 유지
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            
             try:
                 # webdriver-manager로 자동 설치 시도
                 service = Service(ChromeDriverManager().install())
                 driver = webdriver.Chrome(service=service, options=chrome_options)
+                
+                # 브라우저 유지를 위한 추가 설정
+                driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+                
             except Exception as e:
                 logger.warning(f"webdriver-manager 자동 설치 실패: {str(e)}")
                 
@@ -70,12 +80,15 @@ class WebDriverManager:
                     if os.path.exists(chromedriver_path):
                         service = Service(chromedriver_path)
                         driver = webdriver.Chrome(service=service, options=chrome_options)
+                        
+                        # 브라우저 유지를 위한 추가 설정
+                        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
                     else:
                         raise Exception("ChromeDriver를 찾을 수 없습니다. 수동으로 설치해주세요.")
                 else:
                     raise e
             
-            logger.info("웹드라이버 생성 완료")
+            logger.info("웹드라이버 생성 완료 (브라우저 유지 모드)")
             return driver
             
         except Exception as e:

@@ -40,7 +40,7 @@ cd multi_website_rpa
 
 ### 3. 가상환경 생성 및 활성화
 ```bash
-python -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate  # macOS/Linux
 # 또는
 venv\Scripts\activate     # Windows

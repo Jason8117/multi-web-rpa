@@ -1166,6 +1166,10 @@ class IljinHoldingsAutomation(BaseAutomation):
         try:
             logger.info(f"방문객 정보 입력 시작: {len(visitor_data)}명")
             
+            # 방문객 정보 입력 전에 페이지 구조 디버깅
+            logger.info("방문객 정보 입력 전 페이지 구조 분석...")
+            self._debug_page_structure()
+            
             # 방문객 정보 순서대로 입력
             for i, visitor in enumerate(visitor_data):
                 logger.info(f"방문객 {i+1} 입력 중: {visitor.get('성명', '')}")
@@ -1194,6 +1198,15 @@ class IljinHoldingsAutomation(BaseAutomation):
                         return False
             
             logger.info("방문객 정보 입력 완료")
+            
+            # 방문객 정보 입력 후 피방문자 정보 변경 여부 확인
+            logger.info("방문객 정보 입력 후 피방문자 정보 검증...")
+            if not self._verify_applicant_info_unchanged(applicant_data):
+                logger.error("❌ 방문객 정보 입력 중 피방문자 정보가 변경되었습니다!")
+                return False
+            else:
+                logger.info("✅ 피방문자 정보가 정상적으로 유지되었습니다")
+            
             return True
             
         except Exception as e:
@@ -1311,22 +1324,52 @@ class IljinHoldingsAutomation(BaseAutomation):
                 logger.error("방문객 정보 ul을 찾을 수 없습니다")
                 return None
             
-            if is_first_visitor and len(visitor_uls) >= 2:
-                # 첫 번째 방문객: 두 번째 ul 반환 (기존 빈 ul)
-                current_ul = visitor_uls[1]  # 두 번째 ul
-                logger.info(f"첫 번째 방문객입니다. 두 번째 ul 선택 (총 {len(visitor_uls)}개 방문객 ul)")
+            # 방문객 정보 ul과 피방문자 정보 ul을 구분
+            visitor_only_uls = []
+            for ul in visitor_uls:
+                try:
+                    # 피방문자 정보 ul인지 확인 (피방문자 연락처가 있는지 체크)
+                    phone_li = ul.find_element(By.CSS_SELECTOR, "li.list_3")
+                    phone_inputs = phone_li.find_elements(By.CSS_SELECTOR, "input")
+                    
+                    # 피방문자 정보 ul은 연락처 input이 3개 (010-XXXX-XXXX)
+                    # 방문객 정보 ul은 연락처 input이 2개 (XXXX-XXXX)
+                    if len(phone_inputs) == 2:  # 방문객 정보 ul
+                        visitor_only_uls.append(ul)
+                        logger.info("방문객 정보 ul 발견 (연락처 input 2개)")
+                    else:
+                        logger.info("피방문자 정보 ul 발견 (연락처 input 3개) - 제외")
+                        
+                except Exception as e:
+                    logger.debug(f"ul 분석 중 오류: {e}")
+                    continue
+            
+            if not visitor_only_uls:
+                logger.error("방문객 정보만을 위한 ul을 찾을 수 없습니다")
+                return None
+            
+            if is_first_visitor and len(visitor_only_uls) >= 2:
+                # 첫 번째 방문객: 두 번째 방문객 정보 ul 반환 (기존 빈 ul)
+                current_ul = visitor_only_uls[1]  # 두 번째 방문객 정보 ul
+                logger.info(f"첫 번째 방문객입니다. 두 번째 방문객 정보 ul 선택 (총 {len(visitor_only_uls)}개 방문객 정보 ul)")
             else:
-                # 두 번째 방문객부터: 마지막 ul 반환
-                current_ul = visitor_uls[-1]  # 마지막 ul
-                logger.info(f"마지막 ul 선택 (총 {len(visitor_uls)}개 방문객 ul)")
+                # 두 번째 방문객부터: 마지막 방문객 정보 ul 반환
+                current_ul = visitor_only_uls[-1]  # 마지막 방문객 정보 ul
+                logger.info(f"마지막 방문객 정보 ul 선택 (총 {len(visitor_only_uls)}개 방문객 정보 ul)")
             
             # ul의 구조 디버깅
             try:
                 li_elements = current_ul.find_elements(By.CSS_SELECTOR, "li")
-                logger.info(f"현재 ul의 li 개수: {len(li_elements)}")
+                logger.info(f"현재 방문객 정보 ul의 li 개수: {len(li_elements)}")
                 for i, li in enumerate(li_elements):
                     li_class = li.get_attribute('class')
                     logger.info(f"li {i+1}: class='{li_class}'")
+                    
+                    # 연락처 input 개수 확인
+                    if li_class == 'list_3':
+                        phone_inputs = li.find_elements(By.CSS_SELECTOR, "input")
+                        logger.info(f"  - 연락처 input 개수: {len(phone_inputs)}")
+                        
             except Exception as e:
                 logger.warning(f"ul 구조 디버깅 중 오류: {e}")
             
@@ -1405,6 +1448,21 @@ class IljinHoldingsAutomation(BaseAutomation):
             # 현재 방문객 정보 ul 찾기
             current_ul = self._get_current_visitor_ul(is_first_visitor)
             if not current_ul:
+                return False
+            
+            # 추가 보호: 이 ul이 실제로 방문객 정보 ul인지 한 번 더 확인
+            try:
+                phone_li = current_ul.find_element(By.CSS_SELECTOR, "li.list_3")
+                phone_inputs = phone_li.find_elements(By.CSS_SELECTOR, "input")
+                
+                if len(phone_inputs) != 2:
+                    logger.error(f"잘못된 ul 선택: 연락처 input이 {len(phone_inputs)}개입니다. 방문객 정보 ul이 아닙니다.")
+                    return False
+                    
+                logger.info(f"방문객 정보 ul 확인 완료: 연락처 input {len(phone_inputs)}개")
+                
+            except Exception as e:
+                logger.error(f"ul 검증 중 오류: {e}")
                 return False
             
             # 방문자명 입력 (list_1)
@@ -2123,10 +2181,13 @@ class IljinHoldingsAutomation(BaseAutomation):
             logger.error(f"결과 검증 오류: {e}")
             return False
             
-    def run_automation(self, data: Dict[str, Any]) -> bool:
+    def run_automation(self, data: Dict[str, Any], keep_browser: bool = True) -> bool:
         """일진홀딩스 자동화 실행"""
         try:
             self.logger.info("일진홀딩스 자동화 시작")
+            
+            # 브라우저 유지 설정
+            self.set_keep_browser(keep_browser)
             
             # 1. 웹드라이버 설정
             self.setup_driver()
@@ -2160,12 +2221,184 @@ class IljinHoldingsAutomation(BaseAutomation):
                 return False
                 
             self.logger.info("일진홀딩스 자동화 완료")
+            
+            # 브라우저 유지 여부에 따른 처리
+            if self.keep_browser:
+                self.logger.info("🎉 자동화가 성공적으로 완료되었습니다!")
+                self.logger.info("🌐 브라우저가 열린 상태로 유지됩니다.")
+                self.logger.info("💡 웹에서 직접 다음 작업을 진행할 수 있습니다.")
+                self.logger.info("📝 자동화 결과를 확인하고 필요한 경우 수동으로 조정하세요.")
+                self.logger.info("⚠️  브라우저를 닫으려면 수동으로 닫기 버튼을 클릭하세요.")
+                
+                # 브라우저 유지를 위한 추가 설정
+                try:
+                    # 현재 창을 활성화하여 사용자가 쉽게 접근할 수 있도록 함
+                    self.driver.switch_to.window(self.driver.current_window_handle)
+                    self.logger.info("현재 브라우저 창이 활성화되었습니다.")
+                except Exception as e:
+                    self.logger.warning(f"브라우저 창 활성화 중 경고: {e}")
+                    
+            else:
+                self.logger.info("브라우저를 닫습니다.")
+                self.cleanup()
+                
             return True
             
         except Exception as e:
             self.logger.error(f"자동화 실행 중 오류: {e}")
             return False
         finally:
-            # 리소스 정리는 사용자가 선택할 수 있도록 주석 처리
-            # self.cleanup()
-            pass 
+            # 리소스 정리는 keep_browser 설정에 따라 결정
+            if not self.keep_browser:
+                self.cleanup()
+
+    def _debug_page_structure(self):
+        """현재 페이지의 ul 구조를 디버깅하여 방문객 정보와 피방문자 정보를 구분"""
+        try:
+            logger.info("=== 페이지 구조 디버깅 시작 ===")
+            
+            # 모든 ul 찾기
+            all_uls = self.driver.find_elements(By.CSS_SELECTOR, "ul")
+            logger.info(f"페이지에서 발견된 ul 개수: {len(all_uls)}")
+            
+            for ul_idx, ul in enumerate(all_uls):
+                try:
+                    logger.info(f"\n--- ul {ul_idx + 1} 분석 ---")
+                    
+                    # ul의 li 요소들 찾기
+                    li_elements = ul.find_elements(By.CSS_SELECTOR, "li")
+                    logger.info(f"li 개수: {len(li_elements)}")
+                    
+                    for li_idx, li in enumerate(li_elements):
+                        li_class = li.get_attribute('class')
+                        logger.info(f"  li {li_idx + 1}: class='{li_class}'")
+                        
+                        # 연락처 정보가 있는 li인지 확인
+                        if li_class == 'list_3':
+                            try:
+                                phone_inputs = li.find_elements(By.CSS_SELECTOR, "input")
+                                logger.info(f"    - 연락처 input 개수: {len(phone_inputs)}")
+                                
+                                # 각 input의 현재 값 확인
+                                for input_idx, phone_input in enumerate(phone_inputs):
+                                    input_value = phone_input.get_attribute('value')
+                                    input_placeholder = phone_input.get_attribute('placeholder')
+                                    logger.info(f"      input {input_idx + 1}: value='{input_value}', placeholder='{input_placeholder}'")
+                                
+                                # ul 유형 판단
+                                if len(phone_inputs) == 3:
+                                    logger.info(f"    -> 이 ul은 피방문자 정보 ul입니다 (연락처 input 3개)")
+                                elif len(phone_inputs) == 2:
+                                    logger.info(f"    -> 이 ul은 방문객 정보 ul입니다 (연락처 input 2개)")
+                                else:
+                                    logger.info(f"    -> 이 ul은 기타 정보 ul입니다 (연락처 input {len(phone_inputs)}개)")
+                                    
+                            except Exception as e:
+                                logger.warning(f"    - 연락처 input 분석 중 오류: {e}")
+                        
+                        # 성명 정보가 있는 li인지 확인
+                        elif li_class == 'list_1':
+                            try:
+                                name_inputs = li.find_elements(By.CSS_SELECTOR, "input")
+                                if name_inputs:
+                                    name_value = name_inputs[0].get_attribute('value')
+                                    name_placeholder = name_inputs[0].get_attribute('placeholder')
+                                    logger.info(f"    - 성명 input: value='{name_value}', placeholder='{name_placeholder}'")
+                            except Exception as e:
+                                logger.warning(f"    - 성명 input 분석 중 오류: {e}")
+                                
+                except Exception as e:
+                    logger.warning(f"ul {ul_idx + 1} 분석 중 오류: {e}")
+                    continue
+            
+            logger.info("=== 페이지 구조 디버깅 완료 ===")
+            
+        except Exception as e:
+            logger.error(f"페이지 구조 디버깅 중 오류: {e}")
+
+    def _verify_applicant_info_unchanged(self, applicant_data: Dict[str, Any]) -> bool:
+        """방문객 정보 입력 후 피방문자 정보가 변경되지 않았는지 확인"""
+        try:
+            logger.info("피방문자 정보 변경 여부 확인 중...")
+            
+            # 피방문자 정보 ul 찾기 (연락처 input이 3개인 ul)
+            all_uls = self.driver.find_elements(By.CSS_SELECTOR, "ul")
+            applicant_ul = None
+            
+            for ul in all_uls:
+                try:
+                    phone_li = ul.find_element(By.CSS_SELECTOR, "li.list_3")
+                    phone_inputs = phone_li.find_elements(By.CSS_SELECTOR, "input")
+                    
+                    if len(phone_inputs) == 3:  # 피방문자 정보 ul
+                        applicant_ul = ul
+                        break
+                except:
+                    continue
+            
+            if not applicant_ul:
+                logger.warning("피방문자 정보 ul을 찾을 수 없습니다")
+                return True  # 찾을 수 없으면 검증 통과
+            
+            # 피방문자 연락처 확인
+            try:
+                phone_li = applicant_ul.find_element(By.CSS_SELECTOR, "li.list_3")
+                phone_inputs = phone_li.find_elements(By.CSS_SELECTOR, "input")
+                
+                if len(phone_inputs) >= 3:
+                    # 첫 번째 input (010)
+                    first_input_value = phone_inputs[0].get_attribute('value')
+                    # 두 번째 input (XXXX)
+                    second_input_value = phone_inputs[1].get_attribute('value')
+                    # 세 번째 input (XXXX)
+                    third_input_value = phone_inputs[2].get_attribute('value')
+                    
+                    logger.info(f"피방문자 연락처 현재 값: {first_input_value}-{second_input_value}-{third_input_value}")
+                    
+                    # 원래 값과 비교 (엑셀 데이터의 피방문자 연락처)
+                    expected_phone = applicant_data.get('피방문자 연락처', '')
+                    if expected_phone:
+                        phone_parts = expected_phone.split('-')
+                        if len(phone_parts) >= 3:
+                            expected_first = phone_parts[0]
+                            expected_second = phone_parts[1]
+                            expected_third = phone_parts[2]
+                            
+                            if (first_input_value == expected_first and 
+                                second_input_value == expected_second and 
+                                third_input_value == expected_third):
+                                logger.info("✅ 피방문자 연락처가 변경되지 않았습니다")
+                                return True
+                            else:
+                                logger.error("❌ 피방문자 연락처가 변경되었습니다!")
+                                logger.error(f"  기대값: {expected_first}-{expected_second}-{expected_third}")
+                                logger.error(f"  실제값: {first_input_value}-{second_input_value}-{third_input_value}")
+                                return False
+                    
+            except Exception as e:
+                logger.warning(f"피방문자 연락처 확인 중 오류: {e}")
+            
+            # 피방문자 성명 확인
+            try:
+                name_li = applicant_ul.find_element(By.CSS_SELECTOR, "li.list_2")
+                name_input = name_li.find_element(By.CSS_SELECTOR, "input")
+                current_name = name_input.get_attribute('value')
+                expected_name = applicant_data.get('피방문자', '')
+                
+                logger.info(f"피방문자 성명 현재 값: '{current_name}'")
+                logger.info(f"피방문자 성명 기대값: '{expected_name}'")
+                
+                if current_name == expected_name:
+                    logger.info("✅ 피방문자 성명이 변경되지 않았습니다")
+                else:
+                    logger.error("❌ 피방문자 성명이 변경되었습니다!")
+                    return False
+                    
+            except Exception as e:
+                logger.warning(f"피방문자 성명 확인 중 오류: {e}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"피방문자 정보 변경 여부 확인 중 오류: {e}")
+            return False

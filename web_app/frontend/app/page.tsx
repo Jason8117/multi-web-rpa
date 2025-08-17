@@ -5,6 +5,7 @@ import { useState } from 'react';
 export default function Home() {
   const [selectedWebsite, setSelectedWebsite] = useState('');
   const [isRunning, setIsRunning] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
 
@@ -26,6 +27,7 @@ export default function Home() {
     }
 
     setIsRunning(true);
+    setIsCompleted(false);
     setLogs([]);
 
     const formData = new FormData();
@@ -52,6 +54,13 @@ export default function Home() {
           const lines = chunk.split('\n').filter(line => line.trim());
           
           setLogs(prev => [...prev, ...lines]);
+          
+          // 자동화 완료 확인
+          if (chunk.includes('브라우저가 열린 상태로 유지됩니다') || 
+              chunk.includes('자동화 테스트 성공') ||
+              chunk.includes('전체 회원가입 자동화 테스트 완료')) {
+            setIsCompleted(true);
+          }
         }
       } else {
         throw new Error('자동화 실행 실패');
@@ -61,6 +70,18 @@ export default function Home() {
     } finally {
       setIsRunning(false);
     }
+  };
+
+  const resetAutomation = () => {
+    setSelectedWebsite('');
+    setFile(null);
+    setIsCompleted(false);
+    setLogs([]);
+  };
+
+  const getWebsiteDisplayName = (id: string) => {
+    const website = websites.find(w => w.id === id);
+    return website ? website.name : id;
   };
 
   return (
@@ -123,6 +144,41 @@ export default function Home() {
             </button>
           </div>
 
+          {/* 자동화 완료 상태 표시 */}
+          {isCompleted && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-green-500 rounded-full mr-3 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-green-800">
+                    ✅ {getWebsiteDisplayName(selectedWebsite)} 자동화 완료!
+                  </h3>
+                  <p className="text-green-700 text-sm mt-1">
+                    브라우저가 열린 상태로 유지됩니다. 웹에서 직접 다음 작업을 진행할 수 있습니다.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex space-x-2">
+                <button
+                  onClick={resetAutomation}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  새 자동화 시작
+                </button>
+                <button
+                  onClick={() => window.open('http://localhost:3000', '_blank')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  새 탭에서 열기
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* 로그 출력 */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">실행 로그</h2>
@@ -147,6 +203,11 @@ export default function Home() {
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
                   자동화 실행 중...
                 </>
+              ) : isCompleted ? (
+                <>
+                  <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                  자동화 완료
+                </>
               ) : (
                 <>
                   <div className="w-4 h-4 bg-gray-400 rounded-full mr-2"></div>
@@ -154,6 +215,18 @@ export default function Home() {
                 </>
               )}
             </div>
+          </div>
+
+          {/* 사용법 안내 */}
+          <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-800 mb-2">💡 사용법 안내</h3>
+            <ul className="text-blue-700 text-sm space-y-1">
+              <li>• 1단계: 자동화할 웹사이트를 선택하세요</li>
+              <li>• 2단계: 엑셀 데이터 파일을 업로드하세요</li>
+              <li>• 3단계: "자동화 시작" 버튼을 클릭하세요</li>
+              <li>• 4단계: 자동화가 완료되면 브라우저가 열린 상태로 유지됩니다</li>
+              <li>• 5단계: 웹에서 직접 다음 작업을 진행할 수 있습니다</li>
+            </ul>
           </div>
         </div>
       </main>
