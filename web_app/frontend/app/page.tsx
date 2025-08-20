@@ -113,6 +113,30 @@ export default function Home() {
             </div>
           </div>
 
+          {/* 엑셀 템플릿 다운로드 */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">엑셀 템플릿 다운로드</h2>
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-blue-800">일진홀딩스 방문신청 템플릿</h3>
+                  <p className="text-blue-700 text-sm mt-1">
+                    방문신청에 필요한 데이터 형식을 포함한 엑셀 템플릿 파일입니다.
+                  </p>
+                </div>
+                <button
+                  onClick={() => window.open('/api/download-template', '_blank')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  템플릿 다운로드
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* 파일 업로드 */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">엑셀 파일 업로드</h2>
@@ -222,10 +246,11 @@ export default function Home() {
             <h3 className="font-semibold text-blue-800 mb-2">💡 사용법 안내</h3>
             <ul className="text-blue-700 text-sm space-y-1">
               <li>• 1단계: 자동화할 웹사이트를 선택하세요</li>
-              <li>• 2단계: 엑셀 데이터 파일을 업로드하세요</li>
-              <li>• 3단계: "자동화 시작" 버튼을 클릭하세요</li>
-              <li>• 4단계: 자동화가 완료되면 브라우저가 열린 상태로 유지됩니다</li>
-              <li>• 5단계: 웹에서 직접 다음 작업을 진행할 수 있습니다</li>
+              <li>• 2단계: 엑셀 템플릿을 다운로드하여 데이터를 입력하세요</li>
+              <li>• 3단계: 작성된 엑셀 데이터 파일을 업로드하세요</li>
+              <li>• 4단계: "자동화 시작" 버튼을 클릭하세요</li>
+              <li>• 5단계: 자동화가 완료되면 브라우저가 열린 상태로 유지됩니다</li>
+              <li>• 6단계: 웹에서 직접 다음 작업을 진행할 수 있습니다</li>
             </ul>
           </div>
         </div>
