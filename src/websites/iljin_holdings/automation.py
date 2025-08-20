@@ -3,6 +3,7 @@
 """
 
 import time
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
@@ -372,6 +373,10 @@ class IljinHoldingsAutomation(BaseAutomation):
         try:
             logger.info("방문신청 폼 작성 중...")
             
+            # 현재 신청자 데이터 저장 (피방문자 연락처 복원용)
+            self.current_applicant_data = data.copy()
+            logger.info(f"현재 신청자 데이터 저장 완료: {self.current_applicant_data}")
+            
             # 페이지 로딩 대기 (더 긴 시간)
             time.sleep(5)
             
@@ -657,7 +662,14 @@ class IljinHoldingsAutomation(BaseAutomation):
     def fill_applicant(self, applicant_name: str) -> bool:
         """신청자 입력"""
         try:
-            logger.info(f"신청자 입력 중: {applicant_name}")
+            logger.info(f"=== 신청자 입력 시작: {applicant_name} ===")
+            logger.info(f"현재 시간: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # 신청자 입력 전 피방문자 연락처 상태 확인
+            logger.info("신청자 입력 전 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("신청자 입력 전")
+            self._log_applicant_contact_status("신청자 입력 전")
+            self._log_all_inputs_status("신청자 입력 전")
             
             # 네 번째 텍스트 박스에 입력
             fourth_input = self.find_input_element(3)  # 인덱스 3 (네 번째)
@@ -666,6 +678,15 @@ class IljinHoldingsAutomation(BaseAutomation):
                 time.sleep(0.5)
                 fourth_input.send_keys(applicant_name)
                 logger.info(f"네 번째 텍스트 박스에 신청자 '{applicant_name}' 입력 완료")
+                
+                # 신청자 입력 후 피방문자 연락처 상태 확인
+                time.sleep(0.5)
+                logger.info("신청자 입력 후 피방문자 연락처 상태 확인...")
+                self._monitor_applicant_contact_changes("신청자 입력 후")
+                self._log_applicant_contact_status("신청자 입력 후")
+                self._log_all_inputs_status("신청자 입력 후")
+                
+                logger.info(f"=== 신청자 입력 완료: {applicant_name} ===")
                 return True
             else:
                 logger.error("네 번째 텍스트 박스를 찾을 수 없습니다")
@@ -678,7 +699,14 @@ class IljinHoldingsAutomation(BaseAutomation):
     def fill_applicant_contact(self, phone_number: str) -> bool:
         """신청자 연락처 입력"""
         try:
-            logger.info(f"신청자 연락처 입력 중: {phone_number}")
+            logger.info(f"=== 신청자 연락처 입력 시작: {phone_number} ===")
+            logger.info(f"현재 시간: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # 신청자 연락처 입력 전 피방문자 연락처 상태 확인
+            logger.info("신청자 연락처 입력 전 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("신청자 연락처 입력 전")
+            self._log_applicant_contact_status("신청자 연락처 입력 전")
+            self._log_all_inputs_status("신청자 연락처 입력 전")
             
             # 휴대폰 번호를 하이픈으로 분리
             if '-' not in phone_number:
@@ -703,6 +731,13 @@ class IljinHoldingsAutomation(BaseAutomation):
                 time.sleep(0.5)
                 fifth_input.send_keys(second_part)
                 logger.info(f"다섯 번째 텍스트 박스에 '{second_part}' 입력 완료")
+                
+                # 첫 번째 연락처 입력 후 피방문자 연락처 상태 확인
+                time.sleep(0.5)
+                logger.info("첫 번째 신청자 연락처 입력 후 피방문자 연락처 상태 확인...")
+                self._monitor_applicant_contact_changes("첫 번째 신청자 연락처 입력 후")
+                self._log_applicant_contact_status("첫 번째 신청자 연락처 입력 후")
+                self._log_all_inputs_status("첫 번째 신청자 연락처 입력 후")
             else:
                 logger.error("다섯 번째 텍스트 박스를 찾을 수 없습니다")
             
@@ -713,10 +748,23 @@ class IljinHoldingsAutomation(BaseAutomation):
                 time.sleep(0.5)
                 sixth_input.send_keys(third_part)
                 logger.info(f"여섯 번째 텍스트 박스에 '{third_part}' 입력 완료")
+                
+                # 두 번째 연락처 입력 후 피방문자 연락처 상태 확인
+                time.sleep(0.5)
+                logger.info("두 번째 신청자 연락처 입력 후 피방문자 연락처 상태 확인...")
+                self._monitor_applicant_contact_changes("두 번째 신청자 연락처 입력 후")
+                self._log_applicant_contact_status("두 번째 신청자 연락처 입력 후")
+                self._log_all_inputs_status("두 번째 신청자 연락처 입력 후")
             else:
                 logger.error("여섯 번째 텍스트 박스를 찾을 수 없습니다")
             
-            logger.info("신청자 연락처 입력 완료")
+            # 신청자 연락처 입력 후 피방문자 연락처 상태 확인
+            logger.info("신청자 연락처 입력 후 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("신청자 연락처 입력 후")
+            self._log_applicant_contact_status("신청자 연락처 입력 후")
+            self._log_all_inputs_status("신청자 연락처 입력 후")
+            
+            logger.info(f"=== 신청자 연락처 입력 완료: {phone_number} ===")
             return True
             
         except Exception as e:
@@ -1445,6 +1493,15 @@ class IljinHoldingsAutomation(BaseAutomation):
     def _fill_visitor_basic_info(self, visitor: Dict[str, Any], is_first_visitor: bool = False) -> bool:
         """방문객 기본 정보 입력"""
         try:
+            logger.info(f"=== 방문객 {visitor.get('성명', 'Unknown')} 정보 입력 시작 ===")
+            logger.info(f"현재 시간: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # 방문객 입력 전 피방문자 연락처 상태 확인
+            logger.info("방문객 입력 전 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("방문객 입력 전")
+            self._log_applicant_contact_status("방문객 입력 전")
+            self._log_all_inputs_status("방문객 입력 전")
+            
             # 현재 방문객 정보 ul 찾기
             current_ul = self._get_current_visitor_ul(is_first_visitor)
             if not current_ul:
@@ -1476,6 +1533,12 @@ class IljinHoldingsAutomation(BaseAutomation):
                 name_input.clear()
                 name_input.send_keys(visitor_name)
                 logger.info(f"방문자명 입력: {visitor_name}")
+                
+                # 방문자명 입력 후 피방문자 연락처 상태 확인
+                time.sleep(0.5)
+                self._monitor_applicant_contact_changes("방문자명 입력 후")
+                self._log_applicant_contact_status("방문자명 입력 후")
+                self._log_all_inputs_status("방문자명 입력 후")
             
             # 연락처 입력 (list_3)
             visitor_phone = visitor.get('휴대폰번호', '')
@@ -1491,14 +1554,35 @@ class IljinHoldingsAutomation(BaseAutomation):
                         self.driver.execute_script("arguments[0].removeAttribute('disabled')", phone_inputs[0])
                         phone_inputs[0].clear()
                         phone_inputs[0].send_keys(phone_parts[1])
+                        logger.info(f"첫 번째 연락처 input 입력: {phone_parts[1]}")
+                        
+                        # 첫 번째 연락처 입력 후 피방문자 연락처 상태 확인
+                        time.sleep(0.5)
+                        self._monitor_applicant_contact_changes("첫 번째 연락처 입력 후")
+                        self._log_applicant_contact_status("첫 번째 연락처 입력 후")
+                        self._log_all_inputs_status("첫 번째 연락처 입력 후")
                         
                         # 두 번째 input (세 번째 값)
                         self.driver.execute_script("arguments[0].removeAttribute('disabled')", phone_inputs[1])
                         phone_inputs[1].clear()
                         phone_inputs[1].send_keys(phone_parts[2])
+                        logger.info(f"두 번째 연락처 input 입력: {phone_parts[2]}")
                         
-                        logger.info(f"연락처 입력: {phone_parts[1]}-{phone_parts[2]}")
+                        # 두 번째 연락처 입력 후 피방문자 연락처 상태 확인
+                        time.sleep(0.5)
+                        self._monitor_applicant_contact_changes("두 번째 연락처 입력 후")
+                        self._log_applicant_contact_status("두 번째 연락처 입력 후")
+                        self._log_all_inputs_status("두 번째 연락처 입력 후")
+                        
+                        logger.info(f"연락처 입력 완료: {phone_parts[1]}-{phone_parts[2]}")
             
+            # 방문객 입력 후 피방문자 연락처 상태 확인
+            logger.info("방문객 입력 후 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("방문객 입력 후")
+            self._log_applicant_contact_status("방문객 입력 후")
+            self._log_all_inputs_status("방문객 입력 후")
+            
+            logger.info(f"=== 방문객 {visitor.get('성명', 'Unknown')} 정보 입력 완료 ===")
             return True
             
         except Exception as e:
@@ -1508,6 +1592,14 @@ class IljinHoldingsAutomation(BaseAutomation):
     def _fill_vehicle_info(self, visitor: Dict[str, Any]) -> bool:
         """차량정보 입력"""
         try:
+            logger.info(f"=== 차량정보 입력 시작: {visitor.get('성명', 'Unknown')} ===")
+            
+            # 차량정보 입력 전 피방문자 연락처 상태 확인
+            logger.info("차량정보 입력 전 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("차량정보 입력 전")
+            self._log_applicant_contact_status("차량정보 입력 전")
+            self._log_all_inputs_status("차량정보 입력 전")
+            
             vehicle_type = visitor.get('차종', '')  # 차종
             vehicle_number = visitor.get('차량번호', '')  # 차량번호
             
@@ -1525,10 +1617,30 @@ class IljinHoldingsAutomation(BaseAutomation):
             vehicle_button.click()
             time.sleep(1)
             
+            # 차량정보 팝업 열린 후 피방문자 연락처 상태 확인
+            logger.info("차량정보 팝업 열린 후 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("차량정보 팝업 열린 후")
+            self._log_applicant_contact_status("차량정보 팝업 열린 후")
+            self._log_all_inputs_status("차량정보 팝업 열린 후")
+            
             # 팝업에서 차량정보 입력
             if not self._fill_vehicle_popup(vehicle_type, vehicle_number):
                 return False
             
+            # 차량정보 팝업 닫힌 후 피방문자 연락처 상태 확인
+            logger.info("차량정보 팝업 닫힌 후 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("차량정보 팝업 닫힌 후")
+            self._log_applicant_contact_status("차량정보 팝업 닫힌 후")
+            self._log_all_inputs_status("차량정보 팝업 닫힌 후")
+            
+            # 추가로 3초 후 한 번 더 확인
+            time.sleep(3)
+            logger.info("차량정보 팝업 닫힌 후 3초 후 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("차량정보 팝업 닫힌 후 3초 후")
+            self._log_applicant_contact_status("차량정보 팝업 닫힌 후 3초 후")
+            self._log_all_inputs_status("차량정보 팝업 닫힌 후 3초 후")
+            
+            logger.info(f"=== 차량정보 입력 완료: {visitor.get('성명', 'Unknown')} ===")
             return True
             
         except Exception as e:
@@ -1679,6 +1791,44 @@ class IljinHoldingsAutomation(BaseAutomation):
                         except Exception as e3:
                             logger.error(f"모든 차량번호 입력 방법 실패: {e3}")
                             return False
+                
+                # 차량번호 입력 후 피방문자 연락처 상태 단계별 모니터링
+                logger.info("=== 차량번호 입력 후 피방문자 연락처 상태 단계별 모니터링 시작 ===")
+                
+                # 차량번호 입력 직후 피방문자 연락처 상태 확인 (즉시)
+                logger.info("차량번호 입력 직후 피방문자 연락처 상태 확인 (즉시)...")
+                self._monitor_applicant_contact_changes("차량번호 입력 직후 (즉시)")
+                self._log_applicant_contact_status("차량번호 입력 직후 (즉시)")
+                
+                # 차량번호 입력 후 1초 대기 후 피방문자 연락처 상태 확인
+                time.sleep(1)
+                logger.info("차량번호 입력 후 1초 대기 후 피방문자 연락처 상태 확인...")
+                self._monitor_applicant_contact_changes("차량번호 입력 후 1초")
+                self._log_applicant_contact_status("차량번호 입력 후 1초")
+                
+                # 차량번호 입력 후 2초 대기 후 피방문자 연락처 상태 확인
+                time.sleep(1)
+                logger.info("차량번호 입력 후 2초 대기 후 피방문자 연락처 상태 확인...")
+                self._monitor_applicant_contact_changes("차량번호 입력 후 2초")
+                self._log_applicant_contact_status("차량번호 입력 후 2초")
+                
+                # 차량번호 입력 후 3초 대기 후 피방문자 연락처 상태 확인
+                time.sleep(1)
+                logger.info("차량번호 입력 후 3초 대기 후 피방문자 연락처 상태 확인...")
+                self._monitor_applicant_contact_changes("차량번호 입력 후 3초")
+                self._log_applicant_contact_status("차량번호 입력 후 3초")
+                
+                logger.info("=== 차량번호 입력 후 피방문자 연락처 상태 단계별 모니터링 완료 ===")
+                
+                # 차량번호 입력으로 인한 피방문자 연락처 변조 복원
+                logger.info("차량번호 입력으로 인한 피방문자 연락처 변조 복원 시작...")
+                self._restore_applicant_contact_after_vehicle_input()
+                
+                # 복원 후 피방문자 연락처 상태 확인
+                time.sleep(1)
+                logger.info("피방문자 연락처 복원 후 상태 확인...")
+                self._monitor_applicant_contact_changes("피방문자 연락처 복원 후")
+                self._log_applicant_contact_status("피방문자 연락처 복원 후")
                 
             except Exception as e:
                 logger.error(f"차량정보 입력 실패: {e}")
@@ -2208,6 +2358,12 @@ class IljinHoldingsAutomation(BaseAutomation):
             if not self.agree_to_terms():
                 return False
                 
+            # 5-1. 폼 작성 전 피방문자 연락처 상태 확인 (페이지 로딩 직후)
+            logger.info("방문신청약관 동의 후 폼 작성 전 피방문자 연락처 상태 확인...")
+            self._monitor_applicant_contact_changes("방문신청약관 동의 후 폼 작성 전")
+            self._log_applicant_contact_status("방문신청약관 동의 후 폼 작성 전")
+            self._log_all_inputs_status("방문신청약관 동의 후 폼 작성 전")
+                
             # 6. 폼 작성 (피방문자 정보 입력 → 확인 버튼 클릭 → 신청자 정보 입력)
             if not self.fill_form(data):
                 return False
@@ -2402,3 +2558,335 @@ class IljinHoldingsAutomation(BaseAutomation):
         except Exception as e:
             logger.error(f"피방문자 정보 변경 여부 확인 중 오류: {e}")
             return False
+
+    def _log_applicant_contact_status(self, stage: str):
+        """피방문자 연락처 상태 상세 로깅 (파일 저장용)"""
+        try:
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            log_message = f"\n[{timestamp}] === {stage} 피방문자 연락처 상태 ===\n"
+            
+            # 피방문자 연락처 영역 찾기 (table.visit-info-table 내부)
+            try:
+                # 방법 1: table.visit-info-table 내에서 피방문자 연락처 td 찾기
+                contact_td = self.driver.find_element(By.XPATH, "//table[@class='visit-info-table']//td[contains(text(), '피방문자 연락처')]")
+                log_message += f"피방문자 연락처 td 찾기 성공: {contact_td.text}\n"
+                
+                # 해당 td의 다음 td에서 input 요소들 찾기
+                contact_inputs_td = contact_td.find_element(By.XPATH, "./following-sibling::td[1]")
+                
+                # select 상태 (010, 011 등)
+                try:
+                    select_element = contact_inputs_td.find_element(By.CSS_SELECTOR, "select")
+                    select_value = select_element.get_attribute('value')
+                    select_text = select_element.text
+                    log_message += f"Select - value: '{select_value}', text: '{select_text}'\n"
+                except Exception as e:
+                    log_message += f"Select 상태 확인 실패: {e}\n"
+                
+                # input 상태 (2개의 input)
+                input_elements = contact_inputs_td.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                for idx, input_elem in enumerate(input_elements):
+                    try:
+                        input_value = input_elem.get_attribute('value')
+                        input_placeholder = input_elem.get_attribute('placeholder')
+                        input_maxlength = input_elem.get_attribute('maxlength')
+                        input_class = input_elem.get_attribute('class')
+                        input_style = input_elem.get_attribute('style')
+                        log_message += f"Input {idx+1} - value: '{input_value}', placeholder: '{input_placeholder}', maxlength: '{input_maxlength}', class: '{input_class}', style: '{input_style}'\n"
+                    except Exception as e:
+                        log_message += f"Input {idx+1} 상태 확인 실패: {e}\n"
+                        
+            except Exception as e:
+                log_message += f"피방문자 연락처 영역 찾기 실패 (방법 1): {e}\n"
+                
+                # 방법 2: 전체 페이지에서 피방문자 연락처 관련 요소 찾기
+                try:
+                    all_inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                    log_message += f"전체 페이지 input 개수: {len(all_inputs)}\n"
+                    
+                    for idx, input_elem in enumerate(all_inputs):
+                        try:
+                            input_value = input_elem.get_attribute('value')
+                            input_placeholder = input_elem.get_attribute('placeholder')
+                            input_name = input_elem.get_attribute('name')
+                            input_id = input_elem.get_attribute('id')
+                            input_class = input_elem.get_attribute('class')
+                            
+                            # 피방문자 연락처 관련 input인지 확인 (maxlength가 4인 input들)
+                            if input_elem.get_attribute('maxlength') == '4':
+                                log_message += f"  피방문자 연락처 관련 Input {idx+1} - value: '{input_value}', placeholder: '{input_placeholder}', name: '{input_name}', id: '{input_id}', class: '{input_class}'\n"
+                        except Exception as e:
+                            log_message += f"  Input {idx+1} 분석 실패: {e}\n"
+                            
+                except Exception as e:
+                    log_message += f"전체 input 분석 실패: {e}\n"
+            
+            log_message += f"=== {stage} 피방문자 연락처 상태 완료 ===\n"
+            
+            # 로그 파일에 저장
+            log_file_path = "logs/applicant_contact_monitoring.log"
+            os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+            
+            with open(log_file_path, "a", encoding="utf-8") as f:
+                f.write(log_message)
+            
+            logger.info(f"피방문자 연락처 상태 로그 파일 저장 완료: {log_file_path}")
+            
+        except Exception as e:
+            logger.error(f"피방문자 연락처 상태 로깅 중 오류: {e}")
+    
+    def _log_all_inputs_status(self, stage: str):
+        """모든 input 요소 상태 로깅 (파일 저장용)"""
+        try:
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            log_message = f"\n[{timestamp}] === {stage} 모든 input 요소 상태 ===\n"
+            
+            all_inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+            log_message += f"전체 페이지 input 개수: {len(all_inputs)}\n"
+            
+            for idx, input_elem in enumerate(all_inputs):
+                try:
+                    input_value = input_elem.get_attribute('value')
+                    input_placeholder = input_elem.get_attribute('placeholder')
+                    input_name = input_elem.get_attribute('name')
+                    input_id = input_elem.get_attribute('id')
+                    input_class = input_elem.get_attribute('class')
+                    input_maxlength = input_elem.get_attribute('maxlength')
+                    input_style = input_elem.get_attribute('style')
+                    
+                    # 부모 요소 정보
+                    try:
+                        parent_td = input_elem.find_element(By.XPATH, "./ancestor::td[1]")
+                        parent_td_text = parent_td.text
+                        parent_tr = input_elem.find_element(By.XPATH, "./ancestor::tr[1]")
+                        parent_tr_text = parent_tr.text
+                        log_message += f"Input {idx+1} - value: '{input_value}', placeholder: '{input_placeholder}', name: '{input_name}', id: '{input_id}', class: '{input_class}', maxlength: '{input_maxlength}', style: '{input_style}'\n"
+                        log_message += f"  Parent td text: '{parent_td_text}'\n"
+                        log_message += f"  Parent tr text: '{parent_tr_text}'\n"
+                    except:
+                        log_message += f"Input {idx+1} - value: '{input_value}', placeholder: '{input_placeholder}', name: '{input_name}', id: '{input_id}', class: '{input_class}', maxlength: '{input_maxlength}', style: '{input_style}'\n"
+                        log_message += f"  Parent 요소 정보 없음\n"
+                        
+                except Exception as e:
+                    log_message += f"Input {idx+1} 분석 실패: {e}\n"
+            
+            log_message += f"=== {stage} 모든 input 요소 상태 완료 ===\n"
+            
+            # 로그 파일에 저장
+            log_file_path = "logs/all_inputs_monitoring.log"
+            os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+            
+            with open(log_file_path, "a", encoding="utf-8") as f:
+                f.write(log_message)
+            
+            logger.info(f"모든 input 요소 상태 로그 파일 저장 완료: {log_file_path}")
+            
+        except Exception as e:
+            logger.error(f"모든 input 요소 상태 로깅 중 오류: {e}")
+    
+    def _restore_applicant_contact_after_vehicle_input(self):
+        """차량번호 입력으로 인한 피방문자 연락처 변조 복원"""
+        try:
+            logger.info("차량번호 입력으로 인한 피방문자 연락처 변조 복원 시작...")
+            
+            # 현재 실행 중인 데이터에서 원래 피방문자 연락처 값 가져오기
+            if hasattr(self, 'current_applicant_data') and self.current_applicant_data:
+                original_contact = self.current_applicant_data.get('피방문자 연락처', '')
+                logger.info(f"원래 피방문자 연락처: {original_contact}")
+                
+                if original_contact and '-' in original_contact:
+                    # 연락처를 하이픈으로 분리
+                    parts = original_contact.split('-')
+                    if len(parts) == 3:
+                        first_part = parts[0]   # 010
+                        second_part = parts[1]  # 1234
+                        third_part = parts[2]   # 5678
+                        
+                        logger.info(f"분리된 연락처: {first_part}-{second_part}-{third_part}")
+                        
+                        # 피방문자 연락처 영역 찾기
+                        try:
+                            contact_td = self.driver.find_element(By.XPATH, "//table[@class='visit-info-table']//td[contains(text(), '피방문자 연락처')]")
+                            contact_inputs_td = contact_td.find_element(By.XPATH, "./following-sibling::td[1]")
+                            
+                            # select 요소 찾기 및 설정
+                            try:
+                                select_element = contact_inputs_td.find_element(By.CSS_SELECTOR, "select")
+                                self.driver.execute_script("arguments[0].value = arguments[1];", select_element, first_part)
+                                self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", select_element)
+                                logger.info(f"Select 복원 완료: {first_part}")
+                            except Exception as e:
+                                logger.warning(f"Select 복원 실패: {e}")
+                            
+                            # input 요소들 찾기 및 설정
+                            input_elements = contact_inputs_td.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                            if len(input_elements) >= 2:
+                                # 첫 번째 input (두 번째 부분)
+                                self.driver.execute_script("arguments[0].value = '';", input_elements[0])
+                                self.driver.execute_script("arguments[0].value = arguments[1];", input_elements[0], second_part)
+                                self.driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", input_elements[0])
+                                self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", input_elements[0])
+                                logger.info(f"Input 1 복원 완료: {second_part}")
+                                
+                                # 두 번째 input (세 번째 부분)
+                                self.driver.execute_script("arguments[0].value = '';", input_elements[1])
+                                self.driver.execute_script("arguments[0].value = arguments[1];", input_elements[1], third_part)
+                                self.driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", input_elements[1])
+                                self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", input_elements[1])
+                                logger.info(f"Input 2 복원 완료: {third_part}")
+                                
+                                # 복원 후 잠시 대기
+                                time.sleep(0.5)
+                                
+                                logger.info(f"피방문자 연락처 복원 완료: {first_part}-{second_part}-{third_part}")
+                                return True
+                            else:
+                                logger.error(f"Input 요소가 부족합니다: {len(input_elements)}개")
+                                
+                        except Exception as e:
+                            logger.error(f"피방문자 연락처 영역 찾기 실패: {e}")
+                    else:
+                        logger.error(f"연락처 형식이 올바르지 않습니다: {original_contact}")
+                else:
+                    logger.warning("원래 피방문자 연락처가 없거나 형식이 올바르지 않습니다")
+            else:
+                logger.warning("현재 실행 중인 신청자 데이터가 없습니다")
+                
+            return False
+            
+        except Exception as e:
+            logger.error(f"피방문자 연락처 복원 중 오류: {e}")
+            return False
+    
+    def _monitor_applicant_contact_changes(self, stage: str):
+        """피방문자 연락처 필드 상태 모니터링 및 로깅"""
+        try:
+            logger.info(f"=== {stage} 피방문자 연락처 상태 모니터링 ===")
+            
+            # 피방문자 연락처 영역 찾기 (table.visit-info-table 내부)
+            try:
+                # 방법 1: table.visit-info-table 내에서 피방문자 연락처 td 찾기
+                contact_td = self.driver.find_element(By.XPATH, "//table[@class='visit-info-table']//td[contains(text(), '피방문자 연락처')]")
+                logger.info(f"피방문자 연락처 td 찾기 성공: {contact_td.text}")
+                
+                # 해당 td의 다음 td에서 input 요소들 찾기
+                contact_inputs_td = contact_td.find_element(By.XPATH, "./following-sibling::td[1]")
+                
+                # select 상태 (010, 011 등) - 여러 방법으로 시도
+                select_element = None
+                try:
+                    # 방법 1: CSS 선택자로 select 찾기
+                    select_element = contact_inputs_td.find_element(By.CSS_SELECTOR, "select")
+                    logger.info("Select 요소 찾기 성공 (CSS)")
+                except:
+                    try:
+                        # 방법 2: XPath로 select 찾기
+                        select_element = contact_inputs_td.find_element(By.XPATH, ".//select")
+                        logger.info("Select 요소 찾기 성공 (XPath)")
+                    except:
+                        try:
+                            # 방법 3: 전체 페이지에서 select 찾기
+                            all_selects = self.driver.find_elements(By.CSS_SELECTOR, "select")
+                            logger.info(f"전체 페이지 select 개수: {len(all_selects)}")
+                            
+                            for idx, select_elem in enumerate(all_selects):
+                                try:
+                                    select_value = select_elem.get_attribute('value')
+                                    select_text = select_elem.text
+                                    logger.info(f"  Select {idx+1} - value: '{select_value}', text: '{select_text}'")
+                                    
+                                    # 피방문자 연락처 관련 select인지 확인 (010, 011 등의 값이 있는지)
+                                    if '010' in select_text or '011' in select_text:
+                                        select_element = select_elem
+                                        logger.info(f"피방문자 연락처 관련 Select 찾기 성공 (Select {idx+1})")
+                                        break
+                                except Exception as e:
+                                    logger.warning(f"  Select {idx+1} 분석 실패: {e}")
+                        except Exception as e:
+                            logger.warning(f"Select 요소 찾기 실패: {e}")
+                
+                if select_element:
+                    try:
+                        select_value = select_element.get_attribute('value')
+                        select_text = select_element.text
+                        logger.info(f"  Select - value: '{select_value}', text: '{select_text}'")
+                    except Exception as e:
+                        logger.warning(f"  Select 상태 확인 실패: {e}")
+                else:
+                    logger.warning("Select 요소를 찾을 수 없습니다")
+                
+                # input 상태 (2개의 input) - 여러 방법으로 시도
+                input_elements = []
+                try:
+                    # 방법 1: CSS 선택자로 input 찾기
+                    input_elements = contact_inputs_td.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                    logger.info(f"Input 요소 찾기 성공 (CSS): {len(input_elements)}개")
+                except:
+                    try:
+                        # 방법 2: XPath로 input 찾기
+                        input_elements = contact_inputs_td.find_elements(By.XPATH, ".//input[@type='text']")
+                        logger.info(f"Input 요소 찾기 성공 (XPath): {len(input_elements)}개")
+                    except:
+                        try:
+                            # 방법 3: 전체 페이지에서 maxlength가 4인 input 찾기
+                            all_inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text'][maxlength='4']")
+                            logger.info(f"전체 페이지 maxlength=4 input 개수: {len(all_inputs)}")
+                            
+                            for idx, input_elem in enumerate(all_inputs):
+                                try:
+                                    input_value = input_elem.get_attribute('value')
+                                    input_style = input_elem.get_attribute('style')
+                                    logger.info(f"  Input {idx+1} - value: '{input_value}', style: '{input_style}'")
+                                    
+                                    # 피방문자 연락처 관련 input인지 확인 (width: 60px 스타일)
+                                    if 'width: 60px' in (input_style or ''):
+                                        input_elements.append(input_elem)
+                                        logger.info(f"피방문자 연락처 관련 Input 추가 (Input {idx+1})")
+                                except Exception as e:
+                                    logger.warning(f"  Input {idx+1} 분석 실패: {e}")
+                        except Exception as e:
+                            logger.warning(f"Input 요소 찾기 실패: {e}")
+                
+                logger.info(f"피방문자 연락처 영역 요소: select 1개, input {len(input_elements)}개")
+                
+                for idx, input_elem in enumerate(input_elements):
+                    try:
+                        input_value = input_elem.get_attribute('value')
+                        input_placeholder = input_elem.get_attribute('placeholder')
+                        input_maxlength = input_elem.get_attribute('maxlength')
+                        input_class = input_elem.get_attribute('class')
+                        input_style = input_elem.get_attribute('style')
+                        logger.info(f"  Input {idx+1} - value: '{input_value}', placeholder: '{input_placeholder}', maxlength: '{input_maxlength}', class: '{input_class}', style: '{input_style}'")
+                    except Exception as e:
+                        logger.warning(f"  Input {idx+1} 상태 확인 실패: {e}")
+                
+            except Exception as e:
+                logger.warning(f"피방문자 연락처 영역 찾기 실패 (방법 1): {e}")
+                
+                # 방법 2: 전체 페이지에서 피방문자 연락처 관련 요소 찾기
+                try:
+                    all_inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                    logger.info(f"전체 페이지 input 개수: {len(all_inputs)}")
+                    
+                    for idx, input_elem in enumerate(all_inputs):
+                        try:
+                            input_value = input_elem.get_attribute('value')
+                            input_placeholder = input_elem.get_attribute('placeholder')
+                            input_name = input_elem.get_attribute('name')
+                            input_id = input_elem.get_attribute('id')
+                            input_maxlength = input_elem.get_attribute('maxlength')
+                            input_style = input_elem.get_attribute('style')
+                            
+                            # 피방문자 연락처 관련 input인지 확인 (maxlength가 4인 input들)
+                            if input_maxlength == '4':
+                                logger.info(f"  피방문자 연락처 관련 Input {idx+1} - value: '{input_value}', placeholder: '{input_placeholder}', name: '{input_name}', id: '{input_id}', maxlength: '{input_maxlength}', style: '{input_style}'")
+                        except Exception as e:
+                            logger.warning(f"  Input {idx+1} 분석 실패: {e}")
+                            
+                except Exception as e:
+                    logger.warning(f"전체 input 분석 실패: {e}")
+            
+            logger.info(f"=== {stage} 피방문자 연락처 상태 모니터링 완료 ===")
+            
+        except Exception as e:
+            logger.error(f"피방문자 연락처 상태 모니터링 중 오류: {e}")
